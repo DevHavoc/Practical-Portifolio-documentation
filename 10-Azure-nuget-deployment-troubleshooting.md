@@ -1,4 +1,4 @@
-# NuGet Source and Deployment Troubleshooting
+# NuGet Source and Azure Deployment Troubleshooting
 
 ## Problem
 
