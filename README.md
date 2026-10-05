@@ -18,6 +18,20 @@ Para facilitar a navegação, os estudos de caso foram organizados e centralizad
 
 ---
 
+## Recent Case Studies
+
+The latest implementation series covers administrative workflows, access registration, permission enforcement, dashboard summaries, and financial-report query optimization. Each case separates delivered behavior from validation limits and future improvements.
+
+- [List Filtering, Sorting and Bulk Action Consistency](./docs/04-frontend/29-list-filtering-sorting-and-bulk-actions.md)
+- [Selection-Aware Exports and Report Boundaries](./docs/02-data/30-selection-aware-exports-and-report-boundaries.md)
+- [Batch Access Registration and DbContext Concurrency](./docs/01-backend/31-batch-access-registration-and-dbcontext-concurrency.md)
+- [User Overview Permission Gating](./docs/03-security/32-user-overview-permission-gating.md)
+- [Summary Cards, Result Counts and Pagination](./docs/04-frontend/33-summary-cards-result-counts-and-pagination.md)
+- [Financial Report Query Optimization with OpenProject](./docs/02-data/34-dre-openproject-query-optimization.md)
+- [Regression Testing and Evidence-Driven Delivery](./docs/05-cloud/35-regression-testing-and-evidence-driven-delivery.md)
+
+---
+
 ## Purpose
 
 The goal is to demonstrate not only *what* was implemented, but also:
