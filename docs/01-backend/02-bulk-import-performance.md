@@ -107,7 +107,7 @@ A key business decision is whether the import should be atomic.
 ```text
 All rows valid
     ↓
-Commit everything
+Confirm the database transaction
 
 Any critical failure
     ↓
@@ -175,3 +175,11 @@ Increasing the HTTP timeout can hide the symptom without fixing the underlying b
 Bulk processing is not just CRUD multiplied by a large number.
 
 The scale changes the constraints around memory, database traffic, transaction duration and user experience.
+
+## Code example
+
+```csharp
+var rows = stream
+    .Query(useHeaderRow: true)
+    .ToList();
+```

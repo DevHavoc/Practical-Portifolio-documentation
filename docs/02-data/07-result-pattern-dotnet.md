@@ -83,3 +83,11 @@ Small inconsistencies can create friction when multiple developers work across t
 ## Engineering Takeaway
 
 The Result pattern is valuable not because it removes exceptions, but because it gives expected application outcomes a clear and explicit representation.
+
+## Code example
+
+```csharp
+return result.IsSuccess
+    ? Ok(result.Data)
+    : StatusCode(result.StatusCode, new { error = result.Error });
+```

@@ -91,3 +91,19 @@ The important question is:
 ## Possible Improvements
 
 Additional optimization opportunities include projection directly to report DTOs, database-side filtering, pagination for interactive screens and profiling SQL execution plans.
+
+## Code example
+
+```csharp
+public async Task<List<UserAccess>> GetByUserIdsAsync(List<int> userIds)
+{
+    if (userIds == null || userIds.Count == 0)
+        return [];
+    return await appContext.UserAccesses
+        .Include(x => x.CreatedByUser)
+        .AsNoTracking()
+        .Where(x => userIds.Contains(x.UserId))
+        .OrderBy(x => x.System)
+        .ToListAsync();
+}
+```

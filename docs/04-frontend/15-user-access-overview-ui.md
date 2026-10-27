@@ -72,3 +72,11 @@ The overview also avoids unnecessary draggable or resizable behavior, keeping it
 A dedicated overview provides a simpler way to understand the current state of a user without mixing consultation with modification.
 
 Separating these responsibilities keeps both workflows more predictable as the access-management feature grows.
+
+## Code example
+
+```javascript
+var req = this.createRequestModel("api/User/" + userId);
+var result = await req.get();
+this._openUserOverview(result?.data ?? result);
+```

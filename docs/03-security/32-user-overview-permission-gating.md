@@ -46,7 +46,7 @@ The capability check belongs to the actor. The target user identifier only ident
 
 ## Validation
 
-The historical permission-fix commit confirms additional backend guards on both overview data routes and the frontend route changes.
+The inspected authorization implementation confirms additional backend guards on both overview data routes and the frontend route changes.
 
 Recommended regression checks cover an active actor, an inactive actor, a suspended actor, an unauthorized direct request, and a permission change followed by a new request in the same browser session.
 
@@ -65,3 +65,13 @@ Authorization must protect the data path, not only the visual entry point. Multi
 Centralize the capability rule to reduce duplicated controller checks, add dedicated negative authorization tests, and define how an already-open overview reacts to a later revocation.
 
 The inspected fix protects subsequent requests. It is not a claim of real-time removal of data already loaded in the browser or automatic invalidation of every other report route.
+
+## Code example
+
+```csharp
+var canViewOverview = await getUserAccessCase.HasActiveAccessAsync(
+    jwtClaimsExtractor.GetRequiredUserId(),
+    "Visão do Usuário");
+if (!canViewOverview.Data)
+    return Forbid();
+```

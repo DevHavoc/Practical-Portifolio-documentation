@@ -104,3 +104,11 @@ Additional tests could verify that downstream operations are not executed when a
 A `CS7036` detected during deployment exposed a broader test-contract mismatch rather than an Azure-specific problem.
 
 Keeping tests aligned with application contracts helps CI/CD detect these inconsistencies before deployment.
+
+## Code example
+
+```csharp
+_mockUserAccessRepository.Verify(r => r.DeactivateAllByUserIdAsync(5), Times.Once);
+_mockRefreshTokenRepository.Verify(r => r.RevokeAllByUserIdAsync(5), Times.Once);
+_mockBlacklist.Verify(b => b.BlacklistAsync(5, TimeSpan.FromMinutes(60)), Times.Once);
+```

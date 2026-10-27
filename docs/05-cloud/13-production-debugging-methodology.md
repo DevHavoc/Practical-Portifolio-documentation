@@ -177,3 +177,12 @@ The important insight is that the first visible error was not necessarily the fi
 ## Engineering Takeaway
 
 Strong debugging is the ability to turn a vague failure into a sequence of **observable, testable states**.
+
+## Code example
+
+```csharp
+var result = await exportUserAccessesCase.HandleSelectedAsync(dto.AccessIds);
+if (result.IsFailure) return result.ToActionResult();
+return File(result.Data!, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    $"Acessos_Selecionados_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+```

@@ -83,3 +83,10 @@ Audit fields should model relationships when the application needs to answer **w
 ## Possible Improvements
 
 A future audit model could record a complete event history, including changes to user status, profile, password resets and access permissions.
+
+## Code example
+
+```csharp
+Alter.Table("UsersDB").InSchema("public")
+    .AddColumn("CreatedByUserId").AsInt32().Nullable();
+```

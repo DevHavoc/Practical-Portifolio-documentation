@@ -126,3 +126,12 @@ These are different business operations and should not be treated as identical.
 ## Engineering Takeaway
 
 A reliable update implementation starts by defining **what changed**, then choosing the EF Core state-management strategy that represents that change accurately.
+
+## Code example
+
+```csharp
+var stored = await projects.GetByIdAsync(id);
+if (stored is null) return NotFound();
+stored.Name = request.Name ?? stored.Name;
+await projects.UpdateAsync(stored);
+```

@@ -88,3 +88,12 @@ When debugging full-stack problems, trace the data backward until the first dive
     Frontend state
 
 Finding where the data first became invalid is often more useful than fixing where the application finally crashed.
+
+## Code example
+
+```javascript
+const payload = { name: model.getProperty("/name") };
+if (!payload.name?.trim()) throw new Error("Name is required.");
+request.setData(payload);
+await request.put("");
+```

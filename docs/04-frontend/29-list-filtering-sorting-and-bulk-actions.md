@@ -71,3 +71,12 @@ Visual state and request state must have the same source of truth. A button that
 Preserve configuration between visits, add explicit secondary ordering by a unique identifier for equal sort values, and define whether selection should persist across page changes.
 
 Bulk actions on user accounts may still issue separate requests. Their UI should not be described as an atomic database transaction unless the backend actually provides that guarantee.
+
+## Code example
+
+```csharp
+var items = await ApplyOrdering(query, sortBy, sortDirection)
+    .Skip(page * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+```

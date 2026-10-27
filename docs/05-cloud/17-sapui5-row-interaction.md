@@ -73,3 +73,12 @@ Each interaction therefore has a different responsibility.
 When an action applies to an entire entity, the UI interaction should generally represent that same scope.
 
 This makes the interface more natural while keeping explicit modification actions separate.
+
+## Code example
+
+```javascript
+if (event.target.closest(".sapMListTblSelCol")) return;
+var item = sap.ui.getCore().byId(this.id);
+var access = item?.getBindingContext("accesses")?.getObject();
+if (access) that._loadAndOpenUserOverview(access.userId);
+```

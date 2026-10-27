@@ -97,3 +97,13 @@ Database row
 ## Engineering Takeaway
 
 Understanding EF Core's change tracker prevents a large class of persistence bugs and avoids unnecessary changes to controllers or database code.
+
+## Code example
+
+```csharp
+var lista = stakeholders.ToList();
+
+context.ProjetoStakeholders.AddRange(lista);
+
+await context.SaveChangesAsync();
+```

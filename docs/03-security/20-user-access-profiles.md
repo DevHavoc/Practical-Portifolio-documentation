@@ -328,3 +328,9 @@ Future iterations could introduce:
 The important architectural improvement was not simply adding another table. It was recognizing that **user identity and system access are different concepts with different lifecycles**.
 
 Once that boundary was established, database design, API contracts and UI behavior became easier to reason about and extend.
+
+## Code example
+
+```csharp
+Profile = user.Profile.ToString(),
+```

@@ -113,3 +113,11 @@ This avoids overcrowding the primary user-management table.
 ## Engineering Takeaway
 
 A centralized access-management interface becomes more useful when it combines **identity, lifecycle and authorization information** without confusing those concepts.
+
+## Code example
+
+```csharp
+var entity = dto.ToEntity();
+
+var created = await userAccessRepository.CreateAsync(entity);
+```

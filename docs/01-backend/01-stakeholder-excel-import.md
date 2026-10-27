@@ -225,3 +225,13 @@ Project-specific operations should validate the relationship between the authent
 ## Engineering Takeaway
 
 The most important lesson was that an apparently simple requirement — **"import an Excel file"** — becomes a systems problem once real data, authorization, persistence and performance are involved.
+
+## Code example
+
+```csharp
+using var stream = arquivo.OpenReadStream();
+
+var rows = stream
+    .Query(useHeaderRow: true)
+    .ToList();
+```

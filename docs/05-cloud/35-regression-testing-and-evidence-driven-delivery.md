@@ -65,3 +65,27 @@ Describe what was observed, not what the result was hoped to prove. Especially f
 Add automated PDF-content tests with synthetic data, negative capability-authorization tests, visual regression coverage for the shared cards, and reproducible performance runs with several dataset sizes.
 
 Production monitoring should track stage duration, request failure rate, and cache freshness without collecting credentials or personal record content in logs.
+
+
+## Later validation records — October 2026
+
+These are additional historical records, not replacements for the 721-test session above:
+
+| Validated scope | Total / passed / failed | Interpretation |
+|---|---|---|
+| DRE persistence review | 923 / 908 / 15 | Failure names matched the captured baseline. |
+| Local background implementation | 935 / 920 / 15 | 49 frontend tests passed; the feature remained local. |
+| Administrator-access migration before requested test removal | 926 / 911 / 15 | Three new regression cases passed; only the migration was retained in the final application change. |
+
+The PostgreSQL rehearsal applied 54 baseline migrations followed by 14 pending migrations and compared original columns across 47 tables using synthetic records. It preserved existing grants and audit fields, including blocked access, and repeated startup did not duplicate records. No production database was contacted. The temporary local server was stopped after validation.
+
+First reads after process restart varied materially. Reporting only the fastest prepared-query sample would conceal that variation. Compilation, unit tests, a database rehearsal, remote-source measurement and actual deployment remain different kinds of evidence. See [migration rehearsal](../02-data/43-production-migration-rehearsal-with-postgresql.md) and [release boundaries](44-merge-readiness-and-deployment-boundaries.md).
+
+## Code example
+
+```csharp
+await _store.SaveAsync("source-a", "key", "new", old!.Version, default);
+await _store.SaveAsync("source-a", "key", "stale", old.Version, default);
+Assert.That((await _store.GetAsync("source-a", "key", default))!.Payload, Is.EqualTo("new"));
+Assert.That((await _store.GetAsync("source-b", "key", default))!.Payload, Is.EqualTo("other"));
+```

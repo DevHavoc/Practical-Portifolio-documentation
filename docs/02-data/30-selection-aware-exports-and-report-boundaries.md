@@ -71,3 +71,14 @@ The count of selected checkboxes is not enough evidence that an export is correc
 ## Possible Improvements
 
 Add report-content assertions using synthetic users, explicit filtered-result export if required, and asynchronous generation for genuinely large outputs. These are future options, not features introduced in this iteration.
+
+## Code example
+
+```csharp
+var ids = accessIds?.Distinct().Where(id => id > 0).ToList() ?? [];
+if (ids.Count == 0)
+    return Result<byte[]>.Failure("Selecione ao menos um acesso.", 400);
+
+var accesses = await repository.GetByIdsAsync(ids);
+return GenerateExcel(accesses);
+```

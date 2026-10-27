@@ -110,3 +110,9 @@ A future request abstraction could expose consistent methods such as `get`, `pos
 ## Engineering Takeaway
 
 The PDF feature was not only a reporting implementation. It exposed a reusable frontend infrastructure requirement: **HTTP clients need first-class support for binary responses.**
+
+## Code example
+
+```javascript
+return this._requestBlob(path, "POST");
+```

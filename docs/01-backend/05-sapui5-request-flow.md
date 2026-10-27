@@ -153,3 +153,14 @@ This is much more efficient than searching the entire codebase randomly.
 The architecture itself becomes a debugging map.
 
 Once the request lifecycle is understood, many apparently complex full-stack bugs become localized problems.
+
+## Code example
+
+```javascript
+var req = this.createRequestModel(API_PROJETO.stakeholderImportar(projetoId));
+var formData = new FormData();
+
+formData.append("arquivo", oFile);
+
+req.postFormData("", formData)
+```

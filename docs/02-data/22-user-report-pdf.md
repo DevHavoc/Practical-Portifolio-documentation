@@ -76,3 +76,9 @@ Binary endpoints require a different frontend handling strategy from normal JSON
 ## Possible Improvements
 
 Possible future additions include report templates, configurable sections, generated timestamps, localization and automated PDF tests.
+
+## Code example
+
+```csharp
+var accesses = await userAccessRepository.GetByUserIdAsync(userId);
+```

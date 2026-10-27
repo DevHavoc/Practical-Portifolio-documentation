@@ -121,3 +121,11 @@ Loading an unnecessarily large graph can create performance and state-management
 Many "EF didn't update my database" bugs are not SQL problems.
 
 They are **state-management problems** that happen before SQL is generated.
+
+## Code example
+
+```csharp
+context.Attach(row);
+context.Entry(row).State = EntityState.Modified;
+context.Entry(row).Property(x => x.Version).OriginalValue = expectedVersion.Value;
+```

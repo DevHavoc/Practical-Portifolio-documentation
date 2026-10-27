@@ -83,7 +83,7 @@ First verify:
 ```text
 Branch
  ↓
-Commit
+Source revision
  ↓
 Dependencies
  ↓
@@ -131,3 +131,11 @@ Remove invalid source
 Deployment debugging requires thinking about **environment + dependencies + source state together**.
 
 The important lesson was not simply how to fix one NuGet error, but how to distinguish a dependency problem from a stale deployment-state problem.
+
+## Code example
+
+```xml
+<disabledPackageSources>
+  <add key="LegacyLocal" value="true" />
+</disabledPackageSources>
+```

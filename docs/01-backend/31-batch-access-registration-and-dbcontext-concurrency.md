@@ -67,7 +67,7 @@ One existing-assignment query also replaces a database round trip inside every u
 
 ## Validation
 
-The historical registration commit confirms the removal of overlapping catalog queries, the existing-assignment lookup, the zero-created guard, and the displayed creation count. Repository inspection confirms collection insertion and transaction completion.
+The inspected registration implementation confirms the removal of overlapping catalog queries, the existing-assignment lookup, the zero-created guard, and the displayed creation count. Repository inspection confirms collection insertion and transaction completion.
 
 Useful regression scenarios include four new combinations, a partially existing batch, an entirely existing batch, repeated input values, an unknown user, an invalid catalog value, and a persistence failure.
 
@@ -86,3 +86,15 @@ Optimize round trips before adding concurrency. A bulk workflow benefits more fr
 Application-level duplicate checks alone do not guarantee uniqueness under simultaneous batch submissions. A database uniqueness constraint, idempotency support, bounded batch sizes, and structured per-combination outcomes would strengthen the contract further.
 
 Catalog identifiers instead of mutable labels would also make renaming and referential integrity more robust. These are recommendations, not implemented guarantees.
+
+## Code example
+
+```csharp
+foreach (var system in systems)
+{
+    if (!await userAccessCatalogRepository.ExistsAsync("System", system))
+        return false;
+}
+
+return true;
+```

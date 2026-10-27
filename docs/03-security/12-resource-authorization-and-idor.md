@@ -102,3 +102,11 @@ This is stronger than loading by ID alone and checking the relationship later.
 ## Engineering Takeaway
 
 Authorization should be evaluated at the **same level of specificity as the resource being modified**.
+
+## Code example
+
+```csharp
+var resource = await context.Resources.SingleOrDefaultAsync(
+    item => item.Id == resourceId && item.ProjectId == routeProjectId,
+    cancellationToken);
+```

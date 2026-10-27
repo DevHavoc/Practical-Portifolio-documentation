@@ -126,3 +126,9 @@ Retry endpoint
 Dependency Injection is not invisible magic.
 
 It is a dependency graph, and errors become much easier to solve when that graph is followed explicitly.
+
+## Code example
+
+```csharp
+services.AddScoped<GetBaseUrlUseCase>();
+```

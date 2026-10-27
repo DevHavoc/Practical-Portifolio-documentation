@@ -79,3 +79,11 @@ Pagination is a UI concern; export scope is a business requirement. A paginated 
 ## Possible Improvements
 
 For very large datasets, asynchronous report generation, background jobs or streaming could prevent long-running HTTP requests from becoming a bottleneck.
+
+## Code example
+
+```csharp
+var users = userIds != null && userIds.Count > 0
+    ? await userRepository.GetByIdsAsync(userIds)
+    : await userRepository.GetAllForReportAsync(search, isActive);
+```

@@ -104,3 +104,20 @@ Avoiding unnecessary remote work, batching identifiers, and measuring the full d
 ## Possible Improvements
 
 Consider a deliberately designed local reporting snapshot, freshness policy, single-flight request deduplication, and production monitoring. Durable asynchronous jobs remain an option if future report sizes exceed gateway limits, but would require separately validated lifecycle and frontend contracts.
+
+
+## Later implementation phase — October 2026
+
+The measurements above describe an earlier synchronous collection phase. Later changes added selected-scope reads, NDJSON transport and persistent reporting snapshots. They are distinct stages and must not overwrite the older record counts, test counts or timing boundaries.
+
+In the later local SQLite rehearsal against the real external service, the prepared-source query returned 14,093 entries and 6,994 classifications with no remote calls. Historical preparation took 270.39 seconds; a later incremental cycle took 32.10 seconds. Prepared reads in the already-running process took 0.162–0.180 seconds, while first reads in new processes varied from 0.570 to 10.375 seconds. These are source-reader measurements; finance comparison used identical synthetic local financial data, and they do not measure full-page Azure latency.
+
+The prepared data matched an independently captured earlier source reference. Snapshotting reduces repeated external work; it does not make the first historical preparation free. The optional background worker was implemented and tested locally but had not been integrated or deployed in that session. See [persisted snapshots](37-persisted-reporting-snapshots-and-cache-validation.md), [incremental consistency](38-incremental-sync-revisions-and-deletions.md), and [background processing](../01-backend/39-background-report-sync-with-hosted-services.md).
+
+## Code example
+
+```csharp
+var merged = cached.Months.Values.SelectMany(x => x).ToDictionary(x => x.Id!.Value);
+foreach (var entry in changes)
+    merged[entry.Id!.Value] = entry;
+```

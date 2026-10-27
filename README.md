@@ -81,9 +81,9 @@ The same approach applies to deployment, dependency injection, persistence, and 
 
 The repository contains generalized technical documentation only.
 
-No proprietary source code, credentials, confidential records, internal URLs, or sensitive company information should be published here.
+No complete proprietary application files, credentials, confidential records, internal URLs, or sensitive company information are published here. Examples are short code excerpts or adapted illustrations with sensitive details removed.
 
-The examples are intentionally abstracted so that the engineering reasoning remains visible without exposing the original application's implementation.
+The examples explain engineering decisions without exposing complete private application files or confidential records.
 
 ---
 
@@ -91,3 +91,29 @@ The examples are intentionally abstracted so that the engineering reasoning rema
 
 - **GitHub:** [DevHavoc](https://github.com)
 - **LinkedIn:** [Victor Ferreira Guimarães](https://linkedin.com)
+
+
+## New implementation series
+
+- [Long-Running Reports, HTTP 499 and NDJSON Streaming](./docs/05-cloud/36-long-running-report-streaming-and-client-cancellation.md)
+- [Persisted Reporting Snapshots and Cache Validation](./docs/02-data/37-persisted-reporting-snapshots-and-cache-validation.md)
+- [Incremental Synchronization, Revisions and Deletions](./docs/02-data/38-incremental-sync-revisions-and-deletions.md)
+- [Background Report Synchronization with Hosted Services](./docs/01-backend/39-background-report-sync-with-hosted-services.md)
+- [Distributed Synchronization Leases and Atomic Publication](./docs/05-cloud/40-distributed-sync-leases-and-atomic-publication.md)
+- [Stale Search Responses and Synchronization Status](./docs/04-frontend/41-stale-search-responses-and-sync-status.md)
+- [Backfilling Native Access for Existing Administrators](./docs/03-security/42-backfilling-native-access-for-existing-admins.md)
+- [Production Migration Rehearsal with PostgreSQL](./docs/02-data/43-production-migration-rehearsal-with-postgresql.md)
+- [Merge Readiness and Deployment Boundaries](./docs/05-cloud/44-merge-readiness-and-deployment-boundaries.md)
+- [GitHub Profile SVG Links and Image Proxies](./docs/04-frontend/45-github-profile-svg-links-and-image-proxies.md)
+
+## Code example
+
+```csharp
+public void RegistrarVenda(decimal valor)
+{
+    if (valor <= 0)
+        throw new ExceptionVenda("Valor inválido!");
+
+    Saldo += valor;
+}
+```

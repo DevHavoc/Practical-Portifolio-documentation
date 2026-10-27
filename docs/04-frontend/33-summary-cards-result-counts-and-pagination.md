@@ -77,3 +77,13 @@ A visual KPI needs a documented numerator, denominator, time window, and click b
 ## Possible Improvements
 
 Add a real recent-date filter and historical trend comparisons only with explicit backend support. Test a reduced-width layout and a visible, unobtrusive keyboard-focus indicator: removing an unwanted blue border alone does not establish accessibility.
+
+## Code example
+
+```javascript
+var total = Number(summary.total) || 0;
+var percentage = function (value) { return total > 0 ? Math.round(((Number(value) || 0) * 100) / total) : 0; };
+summary.activePercentage = percentage(summary.active);
+summary.inactivePercentage = percentage(summary.inactive);
+summary.suspendedPercentage = percentage(summary.suspended);
+```

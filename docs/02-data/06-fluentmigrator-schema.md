@@ -94,3 +94,11 @@ Frontend model
 ## Engineering Takeaway
 
 A reliable feature keeps the data contract synchronized from the database all the way to the UI.
+
+## Code example
+
+```csharp
+Alter.Table("ProjetoStakeholders").InSchema("public")
+    .AddColumn("Email").AsString(254).Nullable()
+    .AddColumn("Telefone").AsString(30).Nullable();
+```
