@@ -101,9 +101,15 @@ Understanding EF Core's change tracker prevents a large class of persistence bug
 ## Code example
 
 ```csharp
-var lista = stakeholders.ToList();
+public async Task<IEnumerable<ProjetoStakeholder>> CreateRangeAsync(
+IEnumerable<ProjetoStakeholder> stakeholders)
+{
+    var lista = stakeholders.ToList();
 
-context.ProjetoStakeholders.AddRange(lista);
+    context.ProjetoStakeholders.AddRange(lista);
 
-await context.SaveChangesAsync();
+    await context.SaveChangesAsync();
+
+    return lista;
+}
 ```

@@ -179,7 +179,24 @@ The scale changes the constraints around memory, database traffic, transaction d
 ## Code example
 
 ```csharp
-var rows = stream
-    .Query(useHeaderRow: true)
-    .ToList();
+if (stakeholders.Count == 0)
+{
+    return Result<IEnumerable<ProjetoStakeholderResponseDTO>>.Failure(
+        "O arquivo não possui stakeholders válidos para importar.",
+        400);
+}
+var resultado = await stakeholderRepo.CreateRangeAsync(stakeholders);
+return Result<IEnumerable<ProjetoStakeholderResponseDTO>>.Success(
+    resultado.Select(s => new ProjetoStakeholderResponseDTO(
+        s.Id,
+        s.ProjetoId,
+        s.NomeExterno,
+        s.Email,
+        s.Telefone,
+        s.Papel,
+        s.Organizacao,
+        s.Engajamento,
+        s.Expectativas,
+        null,
+        s.CriadoEm)));
 ```

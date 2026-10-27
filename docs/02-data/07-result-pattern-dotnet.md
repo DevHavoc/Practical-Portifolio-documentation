@@ -87,7 +87,19 @@ The Result pattern is valuable not because it removes exceptions, but because it
 ## Code example
 
 ```csharp
-return result.IsSuccess
-    ? Ok(result.Data)
-    : StatusCode(result.StatusCode, new { error = result.Error });
+public class Result<T>
+{
+    public bool IsSuccess { get; init; }
+    public bool IsFailure => !IsSuccess;
+    public T? Data { get; init; }
+    public string? Error { get; init; }
+    public string? Message { get; init; }
+    public int StatusCode { get; init; } = 200;
+
+    public static Result<T> Success(T data, int statusCode = 200, string? message = null) =>
+        new() { IsSuccess = true, Data = data, StatusCode = statusCode, Message = message };
+
+    public static Result<T> Failure(string error, int statusCode = 400, T? data = default) =>
+        new() { IsSuccess = false, Error = error, StatusCode = statusCode, Data = data };
+}
 ```

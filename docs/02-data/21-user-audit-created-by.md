@@ -87,6 +87,16 @@ A future audit model could record a complete event history, including changes to
 ## Code example
 
 ```csharp
-Alter.Table("UsersDB").InSchema("public")
-    .AddColumn("CreatedByUserId").AsInt32().Nullable();
+public override void Up()
+{
+    Alter.Table("UsersDB").InSchema("public")
+        .AddColumn("CreatedByUserId").AsInt32().Nullable();
+
+    Create.ForeignKey("FK_UsersDB_CreatedByUserId")
+        .FromTable("UsersDB").InSchema("public")
+        .ForeignColumn("CreatedByUserId")
+        .ToTable("UsersDB").InSchema("public")
+        .PrimaryColumn("Id")
+        .OnDeleteOrUpdate(System.Data.Rule.None);
+}
 ```

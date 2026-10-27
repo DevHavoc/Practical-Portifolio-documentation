@@ -332,5 +332,29 @@ Once that boundary was established, database design, API contracts and UI behavi
 ## Code example
 
 ```csharp
-Profile = user.Profile.ToString(),
+var report = new UserReportDTO
+{
+    Id = user.Id,
+    Name = user.Name,
+    Username = user.Username,
+    Email = user.Email,
+    Cargo = user.Cargo?.Name ?? "Não informado",
+    Profile = user.Profile.ToString(),
+    IsActive = user.IsActive,
+    CreatedDate = user.CreatedDate,
+
+    CreatedByUserName = user.CreatedByUser?.Name,
+    CreatedByUserUsername = user.CreatedByUser?.Username,
+
+    Accesses = accesses.Select(access => new UserAccessReportDTO
+    {
+        System = access.System,
+        IsActive = access.IsActive,
+        Cargo = access.Cargo,
+        CreatedAt = access.CreatedAt,
+
+        CreatedByUserName = access.CreatedByUser?.Name,
+        CreatedByUserUsername = access.CreatedByUser?.Username
+    }).ToList()
+};
 ```

@@ -103,10 +103,25 @@ This is stronger than loading by ID alone and checking the relationship later.
 
 Authorization should be evaluated at the **same level of specificity as the resource being modified**.
 
+This excerpt passes the route project ID to the import. It does not show an ownership check for an existing child record; that is the separate check discussed above.
+
 ## Code example
 
 ```csharp
-var resource = await context.Resources.SingleOrDefaultAsync(
-    item => item.Id == resourceId && item.ProjectId == routeProjectId,
-    cancellationToken);
+[HttpPost("stakeholders/import")]
+[Consumes("multipart/form-data")]
+public async Task<IActionResult> ImportStakeholders(
+int projetoId,
+[FromForm] IFormFile arquivo)
+{
+    if (arquivo is null || arquivo.Length == 0)
+        return BadRequest("Arquivo não informado.");
+
+    var result = await stakeholderImportCase.ImportAsync(
+        projetoId,
+        arquivo,
+        GetUserId());
+
+    return result.ToActionResult();
+}
 ```

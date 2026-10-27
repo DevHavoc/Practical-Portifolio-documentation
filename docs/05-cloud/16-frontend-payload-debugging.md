@@ -92,8 +92,12 @@ Finding where the data first became invalid is often more useful than fixing whe
 ## Code example
 
 ```javascript
-const payload = { name: model.getProperty("/name") };
-if (!payload.name?.trim()) throw new Error("Name is required.");
-request.setData(payload);
-await request.put("");
+var userId = that._dlgUserId;
+var system = oAccessSystemSelect.getSelectedKey();
+var isActive = oAccessStatusSelect.getSelectedKey() === "true";
+var source = oAccessSourceInput.getValue().trim() || "Manual";
+if (!userId) {
+    MessageToast.show("Salve o usuário antes de adicionar acessos.");
+    return;
+}
 ```

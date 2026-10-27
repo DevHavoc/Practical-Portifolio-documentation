@@ -1,30 +1,43 @@
-# Persisted Reporting Snapshots and Cache Validation
+# Saving Report Data for Reuse After a Restart
 
 ## Problem
 
-An in-process cache lost its useful history when the API restarted. A new report could then repeat years of upstream pagination, metadata retrieval and classification, even when most records had not changed.
+The API kept useful report data in memory. After a restart, it could fetch years of OpenProject data again, even when most of it had not changed.
 
-## Design
+## What changed
 
-A dedicated auxiliary read model stores external time entries, classification information and revision metadata. It does not replace the financial use case or persist its salaries, revenues, taxes and calculated totals. Financial repositories are still read when the report is calculated.
+I added database storage for a snapshot: a saved copy of time entries, their classifications and the information needed to check for changes. It does not save the final financial totals. The report still reads revenues, salaries, taxes and other financial inputs when it runs.
 
-The read model is divided into a repository and a storage service. The repository performs database operations and version checks. The storage service creates a scope per operation, applies payload limits and retention, and allows a remote read if auxiliary storage is unavailable. That separation keeps a long-lived service from sharing a DbContext between concurrent calls.
+The repository handles database reads and writes. A separate storage service opens a fresh dependency scope for each operation, limits the saved data size and removes old snapshots. If this extra storage is unavailable, the reader can fetch from OpenProject.
 
-Keys are scoped to a hash of source and credential identity. The credential itself is not written into the payload. Persisted content is validated before reuse: required collections, periods, identifiers, revision metadata and classification coverage must agree. Invalid content is rebuilt; it is not accepted as a successful partial report. An observed upstream no-store directive disables the corresponding reuse.
+## Keeping the saved data safe to reuse
 
-## Publication and freshness
+Each snapshot belongs to a specific source and credential identity. The key uses a hash; it does not contain the credential itself. Before reuse, the reader checks dates, IDs, required collections, classifications and source revision information. Invalid data is rebuilt. A no-store response from the source prevents reuse.
 
-An expected version prevents an older writer from silently replacing a newer snapshot. Before optional background processing, remote failures did not become fresh success from an old cache. The later background mode deliberately exposes the last completed publication with its original timestamp and a pending-update indication. Those are different freshness contracts.
+Writes also check the expected snapshot version, so an older writer cannot silently replace a newer copy. In background mode, a failed update keeps the previous complete copy and its original date, with an update-pending status.
 
-## Evidence and limitations
+## What was measured
 
-The local rehearsal reused prepared data after process restart without upstream calls, and compared the requested-period output with an independently captured reference. First-process reads varied; persistence is not a promise of uniform sub-second API latency. The payload-length cap counts characters and is separate from the compressed page-cache byte budget. Snapshot payloads themselves are not published in this portfolio.
+A local test reused the saved data after restarting the process without calling OpenProject. The returned data matched a separately captured reference. Startup reads varied, so this does not promise a report in under a second on Azure.
 
 ## Code example
 
 ```csharp
-if (payload.Length > 32 * 1024 * 1024)
+public async Task SaveAsync(string source, string key, string payload, Guid? expectedVersion, CancellationToken ct)
 {
-    return;
+    if (payload.Length > 32 * 1024 * 1024)
+    {
+        return;
+    }
+    await ExecuteAsync(async r =>
+    {
+        var saved = await r.TrySaveAsync(source, Hash(key), payload, expectedVersion, ct);
+        if (saved)
+        {
+            await r.PruneAsync(source, DateTime.UtcNow.AddDays(-Math.Clamp(options.Value.RetentionDays, 1, 365)), ct);
+        }
+
+        return saved;
+    }, false, ct);
 }
 ```

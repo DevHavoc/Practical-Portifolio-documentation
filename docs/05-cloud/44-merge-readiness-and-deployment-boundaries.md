@@ -1,32 +1,34 @@
-# Merge Readiness and Deployment Boundaries
+# Checking What a Merge and Deployment Will Include
 
 ## Problem
 
-The question “will everything arrive safely when we deploy?” combines several distinct states: code integration, local work not yet integrated, remote branch contents, compiled artifacts, database readiness and the actual publishing target.
+Before deploying, we needed to know whether the branches would merge cleanly and whether all the intended changes would be included.
 
-## Integration review
+## What I checked
 
-The remote refs were refreshed and their exclusive histories compared. A merge-tree simulation completed without conflicts. Its resulting tree matched the staging tree, which established that the captured integration would preserve the reviewed contents. This operation left the working checkout unchanged; it still created temporary Git objects for the simulation.
+I refreshed the remote branches, compared their histories and simulated the merge. It had no conflicts, and its files matched the reviewed staging version.
 
-The local work was inspected separately. An optional background synchronization change was not in the remote refs. Deploying those refs could therefore include the earlier persistence implementation while omitting the new worker. A prepared local artifact and a deployment rebuilt from a remote branch are different delivery paths.
+I also checked local changes separately. The background worker was still local, so a deployment built from the remote branch would not include it. A local publish package can contain different files from a build made from that branch.
 
-## Database and authorization
+## Database and access checks
 
-The access module's tests passed, but its new migrations and existing-administrator capability assignment required separate review. That review led to a forward migration and an isolated PostgreSQL rehearsal. A local change, a published branch, an integrated target and a running production instance remain separately verifiable milestones.
+The access module needed more than a clean code merge. Existing admins were missing an access grant, so I added a migration and tested the database upgrade on a temporary PostgreSQL instance.
 
-An old pipeline file did not establish the publishing flow actually used by the team. Configuration flags, migration history, target runtime and the chosen source ref must be checked against the real publishing path instead of inferred from the presence of a build template.
+The team used a publishing flow that the old pipeline file did not describe. The actual source branch, application settings, runtime and database migration history therefore needed checking in that publishing flow.
 
-## Result and limits
+## Result
 
-The corrected administrator-access branch was later simulated against the captured release ref without conflicts, retaining exactly the intended final file. No deployment was performed by this integration review. A clean merge is useful evidence, but it cannot promise that environment permissions, runtime behavior, real data constraints or an incorrectly selected publishing branch will be correct.
+The corrected admin-access branch also passed the merge simulation and kept only the intended migration. The review did not deploy the application.
 
-The commands below use placeholder branch names. They illustrate the review procedure and are not source code extracted from the application migration.
+A clean merge confirms that Git can combine the files. Build checks, database tests and deployment checks answer different questions. None of them alone guarantees that production will work with every permission, setting and record.
+
+The commands below show the branch comparison and merge simulation used in the review. They are review commands, rather than application code.
 
 ## Code example
 
 ```bash
 git status --short
-git rev-list --left-right --count origin/release...origin/staging
-git merge-tree --write-tree origin/release origin/staging
-git rev-parse 'origin/staging^{tree}'
+git rev-list --left-right --count origin/SPRINT_3...origin/SPRINT_3-HML
+git merge-tree --write-tree origin/SPRINT_3 origin/SPRINT_3-HML
+git rev-parse 'origin/SPRINT_3-HML^{tree}'
 ```

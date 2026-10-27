@@ -1,30 +1,39 @@
-# Production Migration Rehearsal with PostgreSQL
+# Testing the Database Upgrade with PostgreSQL
 
 ## Problem
 
-A clean branch merge cannot prove that a production database can reach the required schema. The API runs migrations before serving requests, so a database failure can prevent the new instance from starting. That is not a guarantee that earlier completed migrations caused no changes.
+A merge without conflicts does not prove that the database upgrade will work. The API runs migrations before serving requests. A failure can stop the new instance from starting, even if earlier migrations already changed the database.
 
-## Reconstructing the baseline
+## How I tested it
 
-The rehearsal captured the 54 migration versions present in the release baseline, checked that those migration files had not changed in the target and ran that exact set against a disposable PostgreSQL 18 instance. The test server used a separate data directory, a random credential and localhost only. It did not read a production connection string.
+I rebuilt the release baseline using its 54 migrations on a temporary PostgreSQL 18 instance. It used a separate data directory, localhost and a random test password. No production connection or records were used.
 
-Synthetic users, products, sprints, backlog items, integration logs, revenues and additional costs were added. The harness recorded the original columns of all 47 baseline tables and computed canonical row hashes before the upgrade. Adding a legitimate nullable column should not make that comparison mistake a schema addition for corruption of the old fields.
+I added synthetic users, products, sprints, backlog items, logs, revenues and costs. Before upgrading, I recorded the original columns and calculated a hash of their data across 47 tables. Comparing those same columns afterward allowed new columns without treating them as damaged old data.
 
-## Upgrade scenarios
+## Upgrade results
 
-The direct upgrade applied 14 pending migrations and finished with 68 recorded versions. Original-column fingerprints matched after the update, and all four active administrators in that synthetic scenario received the missing capability.
+The direct upgrade applied 14 more migrations and ended with 68 recorded versions. The original-column data hashes matched. All four active test admins received the missing User Overview access.
 
-A second scenario began at an intermediate access schema with existing assignments and no status column. The old inactive flag migrated to an inactive status. The new administrator backfill then preserved existing grants and audit fields, adding only missing assignments. Repeating the runner left both assignments and version history stable.
+A second test started from an older access schema. Inactive access became the inactive status, existing grants and audit fields stayed unchanged, and only missing grants were added. Running the migrations again did not add duplicates or change the version history.
 
-## Evidence boundaries
+## What this proves
 
-The API Release build passed without warnings or errors. The application suite before the requested test cleanup reported 926 tests: 911 passed and the same 15 baseline failures by name. The three new migration regression cases passed; only the migration was kept in the final application change.
+The Release build passed without warnings or errors. Before the requested test cleanup, 911 of 926 application tests passed; the other 15 matched the existing baseline failures. The three new migration cases passed, and only the migration remained in the final application change.
 
-This was a schema/history reconstruction with synthetic data, not a copy of production records. Empty tables remaining empty contribute less evidence than seeded business scenarios. The rehearsal did not verify production credential permissions, unseen manual schema changes, every real-data constraint or a global rollback of all migrations. SQL Server compatibility code exists for the new backfill, but the full transition was tested only on PostgreSQL. The temporary server was stopped afterward.
+This tested reconstructed schemas and synthetic records. It did not check production permissions, manual database changes or every real record. The full upgrade was tested on PostgreSQL, not SQL Server. The temporary database server was stopped afterward.
 
 ## Code example
 
 ```csharp
-var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-if (target.HasValue) runner.MigrateUp(target.Value); else runner.MigrateUp();
+void Migrate(string database, Type[] types, long? target = null)
+{
+    var connection = new NpgsqlConnectionStringBuilder(builder.ConnectionString) { Database = database };
+    var services = new ServiceCollection().AddFluentMigratorCore()
+        .ConfigureRunner(r => r.AddPostgres().WithGlobalConnectionString(connection.ConnectionString));
+    services.AddSingleton<IMigrationSourceItem>(new TypesSource(types));
+    using var provider = services.BuildServiceProvider();
+    using var scope = provider.CreateScope();
+    var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+    if (target.HasValue) runner.MigrateUp(target.Value); else runner.MigrateUp();
+}
 ```

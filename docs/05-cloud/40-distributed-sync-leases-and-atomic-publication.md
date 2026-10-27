@@ -1,35 +1,46 @@
-# Distributed Synchronization Leases and Atomic Publication
+# Preventing Two Servers from Saving the Same Update
 
 ## Problem
 
-Sequential execution inside one hosted worker does not prevent another cloud instance from starting the same synchronization. A worker that pauses, loses ownership and later resumes must also be prevented from publishing over a newer executor.
+One background worker runs its jobs in order. But two Azure instances could still start the same update. An older worker could also resume after a pause and try to overwrite newer data.
 
-## Lease and ownership
+## What changed
 
-The local implementation uses the shared auxiliary database for a source-scoped lease. Acquisition creates a row or atomically takes an expired row with a new owner token. The source namespace includes the configured credential identity. A ten-minute synchronization budget is paired with a twelve-minute lease, providing a recovery margin if a process disappears.
+I added a shared database lease: a temporary right to run the update. It has an owner ID and an expiry time. Another instance can take over only after it expires. The source and credential identity keep unrelated sources separate.
 
-The owner and lease freshness are checked inside the publication transaction. The lease row remains locked while the complete prepared payload is saved. A stale executor cannot publish after another owner has taken over, and release removes only the lease belonging to the releasing owner. Checking an ownership flag only at the start of a long job would not provide that protection.
+The update has a ten-minute deadline and the lease lasts twelve minutes. This gives the server some time to stop work and release ownership. If the process disappears, another instance can recover after the lease expires.
 
-## Failure behavior
+## Saving the result
 
-Publication is a complete replacement, not a stream of partially updated financial inputs. Transient failure preserves the last successful publication and marks it pending without renewing the success timestamp. Shutdown and release have bounded cancellation handling. A crashed process is recovered through expiry rather than an indefinitely held in-memory lock.
+Before saving, the repository checks that the worker still owns a valid lease. It holds the lease row inside the same database transaction while replacing the prepared data. If ownership has changed, the old worker cannot save. Releasing a lease also requires the same owner ID.
 
-## Validation and scope
+A failed update keeps the last complete data and its original date. The screen shows that an update is pending.
 
-Tests exercised source isolation, a busy lease, expiry takeover, rejected publication by an old owner and an old owner attempting to release a new owner's lease. The feature remained a local implementation during this session; the earlier snapshot repository provided version-based writes but not this complete lease workflow.
+## What was checked
 
-The lease prevents overlap. Independent timers on different instances can still perform sequential checks, so it is not a globally exact five-minute scheduler. The lease test used an isolated relational database; the complete workflow was not exercised on the production database. Database availability and command execution still bound the operation.
+Local tests covered an occupied lease, expiry and takeover, separate sources, and an old owner trying to save or release another owner's lease. The full workflow was not tested against the production database, and this feature had not been integrated or deployed.
+
+The lease prevents overlapping work. It does not make the timers on different servers run at exactly the same time.
 
 ## Code example
 
 ```csharp
-await using var transaction = await context.Database.BeginTransactionAsync(ct);
-// Mantém a linha da concessão bloqueada até a publicação: um executor antigo não publica após perder a posse.
-var owned = await context.DreReadModelSnapshots
-    .Where(x => x.SourceKey == source && x.SnapshotKey == leaseKey
-        && x.Version == owner && x.StoredAtUtc > expiredBeforeUtc)
-    .ExecuteUpdateAsync(set => set.SetProperty(x => x.StoredAtUtc, x => x.StoredAtUtc), ct);
-if (owned != 1) return false;
+public async Task<bool> TryPublishAsync(string source, string leaseKey, Guid owner,
+    DateTime expiredBeforeUtc, string key, string payload, CancellationToken ct)
+{
+    await using var transaction = await context.Database.BeginTransactionAsync(ct);
+    // Mantém a linha da concessão bloqueada até a publicação: um executor antigo não publica após perder a posse.
+    var owned = await context.DreReadModelSnapshots
+        .Where(x => x.SourceKey == source && x.SnapshotKey == leaseKey
+            && x.Version == owner && x.StoredAtUtc > expiredBeforeUtc)
+        .ExecuteUpdateAsync(set => set.SetProperty(x => x.StoredAtUtc, x => x.StoredAtUtc), ct);
+    if (owned != 1) return false;
 
-var saved = await GetAsync(source, key, ct);
+    var saved = await GetAsync(source, key, ct);
+    if (!await TrySaveAsync(source, key, payload, saved?.Version, ct)) return false;
+    await transaction.CommitAsync(ct);
+    var tracked = context.DreReadModelSnapshots.Local.FirstOrDefault(x => x.SourceKey == source && x.SnapshotKey == key);
+    if (tracked is not null) context.Entry(tracked).State = EntityState.Detached;
+    return true;
+}
 ```

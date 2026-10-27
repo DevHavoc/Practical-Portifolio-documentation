@@ -75,8 +75,17 @@ Bulk actions on user accounts may still issue separate requests. Their UI should
 ## Code example
 
 ```csharp
-var items = await ApplyOrdering(query, sortBy, sortDirection)
-    .Skip(page * pageSize)
-    .Take(pageSize)
-    .ToListAsync();
+public async Task<(List<UserAccess> Items, int TotalCount, int OverallTotalCount)> GetPagedAsync(int page, int pageSize, string? search = null, bool? isActive = null, string? status = null, string[]? systems = null, string[]? profiles = null, string sortBy = "username", string sortDirection = "asc")
+{
+    var overallTotalCount = await appContext.UserAccesses.CountAsync();
+    var query = BuildQuery(search, isActive, status);
+    if (systems?.Length > 0) query = query.Where(access => systems.Contains(access.System));
+    if (profiles?.Length > 0) query = query.Where(access => profiles.Contains(access.Cargo));
+    var totalCount = await query.CountAsync();
+    var items = await ApplyOrdering(query, sortBy, sortDirection)
+        .Skip(page * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+    return (items, totalCount, overallTotalCount);
+}
 ```

@@ -2,7 +2,7 @@
 
 A technical portfolio focused on **engineering reasoning, problem solving, debugging, and implementation experience**.
 
-This repository documents selected software engineering work performed in a professional environment without exposing proprietary source code, credentials, internal URLs, confidential business data, or company-specific implementation details.
+This repository documents selected software engineering work performed in a professional environment using short excerpts from work I implemented or changed, without publishing credentials, internal URLs or confidential business data.
 
 ---
 
@@ -79,9 +79,9 @@ The same approach applies to deployment, dependency injection, persistence, and 
 
 ## Confidentiality
 
-The repository contains generalized technical documentation only.
+The case studies include explanations and short examples from the implementation.
 
-No complete proprietary application files, credentials, confidential records, internal URLs, or sensitive company information are published here. Examples are short code excerpts or adapted illustrations with sensitive details removed.
+No complete proprietary application files, credentials, confidential records, internal URLs, or sensitive company information are published here. The code examples use real implementation excerpts. Descriptions explain their purpose and limits.
 
 The examples explain engineering decisions without exposing complete private application files or confidential records.
 
@@ -95,16 +95,16 @@ The examples explain engineering decisions without exposing complete private app
 
 ## New implementation series
 
-- [Long-Running Reports, HTTP 499 and NDJSON Streaming](./docs/05-cloud/36-long-running-report-streaming-and-client-cancellation.md)
-- [Persisted Reporting Snapshots and Cache Validation](./docs/02-data/37-persisted-reporting-snapshots-and-cache-validation.md)
-- [Incremental Synchronization, Revisions and Deletions](./docs/02-data/38-incremental-sync-revisions-and-deletions.md)
-- [Background Report Synchronization with Hosted Services](./docs/01-backend/39-background-report-sync-with-hosted-services.md)
-- [Distributed Synchronization Leases and Atomic Publication](./docs/05-cloud/40-distributed-sync-leases-and-atomic-publication.md)
-- [Stale Search Responses and Synchronization Status](./docs/04-frontend/41-stale-search-responses-and-sync-status.md)
-- [Backfilling Native Access for Existing Administrators](./docs/03-security/42-backfilling-native-access-for-existing-admins.md)
-- [Production Migration Rehearsal with PostgreSQL](./docs/02-data/43-production-migration-rehearsal-with-postgresql.md)
-- [Merge Readiness and Deployment Boundaries](./docs/05-cloud/44-merge-readiness-and-deployment-boundaries.md)
-- [GitHub Profile SVG Links and Image Proxies](./docs/04-frontend/45-github-profile-svg-links-and-image-proxies.md)
+- [Keeping Long Reports Connected with NDJSON](./docs/05-cloud/36-long-running-report-streaming-and-client-cancellation.md)
+- [Saving Report Data for Reuse After a Restart](./docs/02-data/37-persisted-reporting-snapshots-and-cache-validation.md)
+- [Updating Changed Records Without Reloading Every Year](./docs/02-data/38-incremental-sync-revisions-and-deletions.md)
+- [Preparing Report Data in the Background](./docs/01-backend/39-background-report-sync-with-hosted-services.md)
+- [Preventing Two Servers from Saving the Same Update](./docs/05-cloud/40-distributed-sync-leases-and-atomic-publication.md)
+- [Keeping Old Search Responses Out of the Current Screen](./docs/04-frontend/41-stale-search-responses-and-sync-status.md)
+- [Giving Existing Admins the Missing User Overview Access](./docs/03-security/42-backfilling-native-access-for-existing-admins.md)
+- [Testing the Database Upgrade with PostgreSQL](./docs/02-data/43-production-migration-rehearsal-with-postgresql.md)
+- [Checking What a Merge and Deployment Will Include](./docs/05-cloud/44-merge-readiness-and-deployment-boundaries.md)
+- [Fixing Broken Icons in a GitHub Profile README](./docs/04-frontend/45-github-profile-svg-links-and-image-proxies.md)
 
 ## Code example
 

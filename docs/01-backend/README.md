@@ -1,6 +1,6 @@
 # Backend Case Studies
 
-[Back to the portfolio](../../README.md)
+[Cloud Case Studies](../../README.md)
 
 ## Documentation
 
@@ -11,7 +11,7 @@
 - [SAPUI5 to ASP.NET Core Request Flow](05-sapui5-request-flow.md) · [code example](05-sapui5-request-flow.md#code-example)
 - [Test Contract Alignment After Use Case Changes](24-jwt-constructor-azure-fix.md.md) · [code example](24-jwt-constructor-azure-fix.md.md#code-example)
 - [Batch Access Registration and DbContext Concurrency](31-batch-access-registration-and-dbcontext-concurrency.md) · [code example](31-batch-access-registration-and-dbcontext-concurrency.md#code-example)
-- [Background Report Synchronization with Hosted Services](39-background-report-sync-with-hosted-services.md) · [code example](39-background-report-sync-with-hosted-services.md#code-example)
+- [Preparing Report Data in the Background](39-background-report-sync-with-hosted-services.md) · [code example](39-background-report-sync-with-hosted-services.md#code-example)
 
 ## Code example
 

@@ -1,28 +1,39 @@
-# Long-Running Reports, HTTP 499 and NDJSON Streaming
+# Keeping Long Reports Connected with NDJSON
 
 ## Problem
 
-A multi-year financial-report request ended with HTTP 499, while shorter searches could complete. The failure appeared after substantial upstream collection. Increasing a timeout alone would still leave the connection idle during expensive work and would not reduce the amount of data fetched.
+A financial report could finish for one year and fail with HTTP 499 when the user selected several years. The browser waited while the server collected data from OpenProject.
 
-## Investigation and decision
+## What changed
 
-The transport and collection costs were treated separately. The existing JSON route was retained, and a companion NDJSON route emitted progress frames while the same report use case ran. The user subsequently supplied an HTTP 200 response for the streaming route; that status was evidence of an open transport, not by itself proof of a completed report.
+I added a streaming route alongside the existing JSON route. It sends a small progress message every fifteen seconds while the report runs. The browser then receives either the completed result or an error. The report has a ten-minute deadline, and cancelling the request also cancels its work.
 
-The recorded implementation uses a fifteen-second heartbeat, a ten-minute report deadline and cancellation propagation. Admission limits retain one active query per actor and two per instance. A bounded filter length prevents an arbitrarily large selection string. These are the limits of the inspected implementation, not a general Azure configuration recommendation.
+The route limits active searches to one per user and two per server instance. It also limits the filter string length. These checks help keep a large search from using all the server's capacity.
 
-## Result contract
+## Why the browser checks the messages
 
-Progress, successful result and error are distinct frame types. The client waits for a complete result and rejects an interrupted stream. Because HTTP headers may already have been sent, a later report error can arrive inside a successful HTTP transport. The frontend must inspect the frame contract instead of treating every HTTP 200 as report success.
+The server may send HTTP 200 before it finishes calculating the report. A later error therefore has to travel in the stream. The frontend only accepts the report when it receives the complete result message; a progress message or an interrupted connection is not enough.
 
-## Validation and limits
+## What was checked
 
-Cancellation, incomplete streams and metadata delivery were checked during the implementation work. A heartbeat can help with idle connections, but it does not prevent deliberate browser cancellation, establish a proxy-buffering policy or optimize the upstream queries. Collection optimization and prepared snapshots are separate case studies. The error observed here is not evidence that every possible HTTP 499 has the same cause.
+The implementation checks covered cancellation, errors and incomplete streams. The streaming route later returned HTTP 200 in the shared environment. That confirmed the route was responding, but the status alone did not prove that the report had finished.
+
+Progress messages help keep the connection active. They do not make OpenProject return data faster or prevent every possible HTTP 499.
 
 ## Code example
 
 ```csharp
-var heartbeat = Task.Delay(TimeSpan.FromSeconds(15), tick.Token);
-if (await Task.WhenAny(query, heartbeat) == query) { tick.Cancel(); break; }
-token.ThrowIfCancellationRequested();
 await Write(new { type = "progress" });
+query = getDreConsolidado.HandleAsync(start, end, fiscalizadores, token);
+while (!query.IsCompleted)
+{
+    using var tick = CancellationTokenSource.CreateLinkedTokenSource(token);
+    var heartbeat = Task.Delay(TimeSpan.FromSeconds(15), tick.Token);
+    if (await Task.WhenAny(query, heartbeat) == query) { tick.Cancel(); break; }
+    token.ThrowIfCancellationRequested();
+    await Write(new { type = "progress" });
+}
+var result = await query;
+if (result.IsSuccess) await Write(new { type = "result", data = result.Data });
+else await Write(new { type = "error", message = result.Error ?? "Não foi possível concluir o DRE." });
 ```

@@ -1,28 +1,75 @@
-# Stale Search Responses and Synchronization Status
+# Keeping Old Search Responses Out of the Current Screen
 
 ## Problem
 
-A user can launch a second search while the first is still in flight. If the first response arrives late, it can replace newer data or attach an old synchronization timestamp to the current result. A valid timestamp is misleading when it belongs to a different request.
+A user can start another search before the first one finishes. If the old response arrives later, it could replace the new result or show the wrong last-update time.
 
-## Request lifecycle
+## What changed
 
-The controller keeps a generation number and an AbortController for the active search. Starting another search aborts the previous request and advances the generation. Success, error, synchronization metadata and busy-state cleanup must all confirm that they still belong to that generation before changing the model.
+I added a request counter and used AbortController to cancel the previous search. Each callback checks the counter and cancellation state before changing the screen. This includes results, errors, update status and the loading indicator.
 
-The NDJSON service waits for a complete successful result before invoking its metadata callback. Failed or incomplete streams do not publish a fresh synchronization status. The financial array remains the existing response value, while optional metadata identifies the source publication actually read by that request.
+Cancellation alone is not enough: a response may already be on its way. The counter lets the controller reject that response even then.
 
-## Presentation
+## Showing the correct update time
 
-The screen formats only a valid date and displays it through a text binding. A stale publication uses a warning state and keeps its original timestamp. Reading a global status after the report finishes could race with a newer background publication; the server instead supplies the status captured by the reader used for the result.
+The service only passes the update status to the controller after receiving a complete result. Failed or incomplete streams do not set a new update time. The server sends the status of the saved copy used by that report, so another background update cannot change the meaning of the displayed timestamp.
 
-Clearing or cancelling a search does not let its later callback replace the current status. The guard is necessary even when transport cancellation exists because an obsolete operation may already have produced a response.
+The screen validates the date and shows it as text. If the report uses the last complete copy while an update is pending, it shows a warning and keeps the original date.
 
-## Evidence and limits
+## What was checked
 
-The local frontend cases checked completed-stream metadata, failed/incomplete streams, invalid metadata and callbacks from a cancelled search. This is code-level verification, not a claim of a fresh visual inspection of every browser state in production. Synchronization metadata was part of the local background change, which had not been deployed in that session. Existing NDJSON transport and the optional background feature have separate delivery states.
+Local frontend tests covered complete results, failed and incomplete streams, invalid status data and callbacks from cancelled searches. This was a code check, not a production browser review. The update-status feature belonged to the background work that had not been integrated or deployed during this session.
 
 ## Code example
 
 ```javascript
-if (generation !== that._dreGeneration || abort.signal.aborted) return;
-that._setDreSyncStatus(sync);
+return CostOpsService.getDre(
+    this._dreDataInicio,
+    this._dreDataFim,
+    sFiscalizadores,
+    abort.signal,
+    function (sync) {
+        if (generation !== that._dreGeneration || abort.signal.aborted) return;
+        that._setDreSyncStatus(sync);
+    }
+)
+    .then(function (oData) {
+        if (generation !== that._dreGeneration || abort.signal.aborted) return;
+        var aList = oData.data || oData || [];
+        oModel.setProperty(
+            "/dreConsolidadoList",
+            that._buildDreConsolidadoRows(aList)
+        );
+        oModel.setProperty(
+            "/dreConsolidadoComparativo",
+            that._buildDreComparativo(aList)
+        );
+        oModel.setProperty(
+            "/dreConsolidadoCustoAdicional",
+            that._buildDreCustoAdicionalComparativo(aList)
+        );
+        oModel.setProperty(
+            "/dreResumo",
+            that._buildDreViewModel(
+                that._buildDreAgregado(aList)
+            )
+        );
+        oModel.setProperty("/dreConsolidadoLoaded", true);
+        oModel.setProperty("/dreLoaded", true);
+    })
+    .catch(function (error) {
+        if (generation !== that._dreGeneration || abort.signal.aborted) return;
+        oModel.setProperty("/dreErro", true);
+        oModel.setProperty("/dreConsolidadoLoaded", false);
+        oModel.setProperty("/dreLoaded", false);
+
+        MessageToast.show(
+            (error && error.message) || that.getText("CostOps.Dre.ErroCarregarDre")
+        );
+    })
+    .finally(function () {
+        if (oContent && generation === that._dreGeneration) {
+            oContent.setBusy(false);
+        }
+    });
 ```

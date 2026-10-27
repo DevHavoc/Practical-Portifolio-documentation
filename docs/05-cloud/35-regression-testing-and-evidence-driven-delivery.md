@@ -84,8 +84,15 @@ First reads after process restart varied materially. Reporting only the fastest 
 ## Code example
 
 ```csharp
-await _store.SaveAsync("source-a", "key", "new", old!.Version, default);
-await _store.SaveAsync("source-a", "key", "stale", old.Version, default);
-Assert.That((await _store.GetAsync("source-a", "key", default))!.Payload, Is.EqualTo("new"));
-Assert.That((await _store.GetAsync("source-b", "key", default))!.Payload, Is.EqualTo("other"));
+[Test]
+public async Task SourceNamespacesAreSeparateAndAStaleWriterCannotReplaceANewerSnapshot()
+{
+    await _store.SaveAsync("source-a", "key", "old", null, default);
+    await _store.SaveAsync("source-b", "key", "other", null, default);
+    var old = await _store.GetAsync("source-a", "key", default);
+    await _store.SaveAsync("source-a", "key", "new", old!.Version, default);
+    await _store.SaveAsync("source-a", "key", "stale", old.Version, default);
+    Assert.That((await _store.GetAsync("source-a", "key", default))!.Payload, Is.EqualTo("new"));
+    Assert.That((await _store.GetAsync("source-b", "key", default))!.Payload, Is.EqualTo("other"));
+}
 ```

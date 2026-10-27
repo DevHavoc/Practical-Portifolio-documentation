@@ -98,7 +98,10 @@ A reliable feature keeps the data contract synchronized from the database all th
 ## Code example
 
 ```csharp
-Alter.Table("ProjetoStakeholders").InSchema("public")
-    .AddColumn("Email").AsString(254).Nullable()
-    .AddColumn("Telefone").AsString(30).Nullable();
+public override void Up()
+{
+    Alter.Table("ProjetoStakeholders").InSchema("public")
+        .AddColumn("Email").AsString(254).Nullable()
+        .AddColumn("Telefone").AsString(30).Nullable();
+}
 ```

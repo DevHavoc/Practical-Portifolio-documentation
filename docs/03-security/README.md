@@ -1,6 +1,6 @@
 # Security Case Studies
 
-[Back to the portfolio](../../README.md)
+[Cloud Case Studies](../../README.md)
 
 ## Documentation
 
@@ -8,14 +8,22 @@
 - [Resource Authorization and IDOR Analysis](12-resource-authorization-and-idor.md) · [code example](12-resource-authorization-and-idor.md#code-example)
 - [User Access Management and Profile Modeling](20-user-access-profiles.md) · [code example](20-user-access-profiles.md#code-example)
 - [User Overview Permission Gating](32-user-overview-permission-gating.md) · [code example](32-user-overview-permission-gating.md#code-example)
-- [Backfilling Native Access for Existing Administrators](42-backfilling-native-access-for-existing-admins.md) · [code example](42-backfilling-native-access-for-existing-admins.md#code-example)
+- [Giving Existing Admins the Missing User Overview Access](42-backfilling-native-access-for-existing-admins.md) · [code example](42-backfilling-native-access-for-existing-admins.md#code-example)
 
 ## Code example
 
 ```csharp
-var canViewOverview = await getUserAccessCase.HasActiveAccessAsync(
-    jwtClaimsExtractor.GetRequiredUserId(),
-    "Visão do Usuário");
-if (!canViewOverview.Data)
-    return Forbid();
+[HttpGet("user-overview/{userId:int}")]
+[Authorize(Policy = "Admin")]
+[HasPermission("Acessos.Usuarios.Visualizar")]
+public async Task<IActionResult> GetUserOverview(int userId)
+{
+    var canViewOverview = await getUserAccessCase.HasActiveAccessAsync(
+        jwtClaimsExtractor.GetRequiredUserId(),
+        "Visão do Usuário");
+    if (!canViewOverview.Data)
+        return Forbid();
+
+    return (await getUserByIdCase.HandleAsync(userId)).ToActionResult();
+}
 ```

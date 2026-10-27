@@ -90,11 +90,17 @@ Catalog identifiers instead of mutable labels would also make renaming and refer
 ## Code example
 
 ```csharp
-foreach (var system in systems)
+private async Task<bool> IsValidCatalogSelectionAsync(List<string> systems, string profile)
 {
-    if (!await userAccessCatalogRepository.ExistsAsync("System", system))
+    if (!await userAccessCatalogRepository.ExistsAsync("Profile", profile))
         return false;
-}
 
-return true;
+    foreach (var system in systems)
+    {
+        if (!await userAccessCatalogRepository.ExistsAsync("System", system))
+            return false;
+    }
+
+    return true;
+}
 ```

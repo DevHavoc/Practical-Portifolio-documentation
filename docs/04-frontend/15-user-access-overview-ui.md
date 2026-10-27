@@ -76,7 +76,13 @@ Separating these responsibilities keeps both workflows more predictable as the a
 ## Code example
 
 ```javascript
-var req = this.createRequestModel("api/User/" + userId);
-var result = await req.get();
-this._openUserOverview(result?.data ?? result);
+_loadAndOpenUserOverview: async function (userId) {
+  try {
+    var req = this.createRequestModel("api/User/" + userId);
+    var result = await req.get();
+    this._openUserOverview(result?.data ?? result);
+  } catch (error) {
+    this._handleBackendErrors(error);
+  }
+},
 ```

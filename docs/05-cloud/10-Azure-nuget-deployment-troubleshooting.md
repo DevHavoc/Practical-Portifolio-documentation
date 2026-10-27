@@ -136,6 +136,6 @@ The important lesson was not simply how to fix one NuGet error, but how to disti
 
 ```xml
 <disabledPackageSources>
-  <add key="LegacyLocal" value="true" />
+  <add key="EyeOfGod.Local" value="true" />
 </disabledPackageSources>
 ```

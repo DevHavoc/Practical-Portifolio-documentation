@@ -75,10 +75,13 @@ Add report-content assertions using synthetic users, explicit filtered-result ex
 ## Code example
 
 ```csharp
-var ids = accessIds?.Distinct().Where(id => id > 0).ToList() ?? [];
-if (ids.Count == 0)
-    return Result<byte[]>.Failure("Selecione ao menos um acesso.", 400);
+public async Task<Result<byte[]>> HandleSelectedAsync(List<int>? accessIds)
+{
+    var ids = accessIds?.Distinct().Where(id => id > 0).ToList() ?? [];
+    if (ids.Count == 0)
+        return Result<byte[]>.Failure("Selecione ao menos um acesso.", 400);
 
-var accesses = await repository.GetByIdsAsync(ids);
-return GenerateExcel(accesses);
+    var accesses = await repository.GetByIdsAsync(ids);
+    return GenerateExcel(accesses);
+}
 ```

@@ -1,6 +1,6 @@
 # Data Case Studies
 
-[Back to the portfolio](../../README.md)
+[Cloud Case Studies](../../README.md)
 
 ## Documentation
 
@@ -11,9 +11,9 @@
 - [Bulk User PDF Export](23-users-bulk-pdf-export.md) · [code example](23-users-bulk-pdf-export.md#code-example)
 - [Selection-Aware Exports and Report Boundaries](30-selection-aware-exports-and-report-boundaries.md) · [code example](30-selection-aware-exports-and-report-boundaries.md#code-example)
 - [Financial Report Query Optimization with OpenProject](34-dre-openproject-query-optimization.md) · [code example](34-dre-openproject-query-optimization.md#code-example)
-- [Persisted Reporting Snapshots and Cache Validation](37-persisted-reporting-snapshots-and-cache-validation.md) · [code example](37-persisted-reporting-snapshots-and-cache-validation.md#code-example)
-- [Incremental Synchronization, Revisions and Deletions](38-incremental-sync-revisions-and-deletions.md) · [code example](38-incremental-sync-revisions-and-deletions.md#code-example)
-- [Production Migration Rehearsal with PostgreSQL](43-production-migration-rehearsal-with-postgresql.md) · [code example](43-production-migration-rehearsal-with-postgresql.md#code-example)
+- [Saving Report Data for Reuse After a Restart](37-persisted-reporting-snapshots-and-cache-validation.md) · [code example](37-persisted-reporting-snapshots-and-cache-validation.md#code-example)
+- [Updating Changed Records Without Reloading Every Year](38-incremental-sync-revisions-and-deletions.md) · [code example](38-incremental-sync-revisions-and-deletions.md#code-example)
+- [Testing the Database Upgrade with PostgreSQL](43-production-migration-rehearsal-with-postgresql.md) · [code example](43-production-migration-rehearsal-with-postgresql.md#code-example)
 
 ## Code example
 

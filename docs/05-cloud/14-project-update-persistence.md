@@ -130,8 +130,31 @@ A reliable update implementation starts by defining **what changed**, then choos
 ## Code example
 
 ```csharp
-var stored = await projects.GetByIdAsync(id);
-if (stored is null) return NotFound();
-stored.Name = request.Name ?? stored.Name;
-await projects.UpdateAsync(stored);
+public async Task<Result<ProjetoResponseDTO>> HandleAsync(int id, ProjetoUpdateDTO dto, int requestingUserId)
+{
+    var projeto = await projetoRepository.GetByIdAsync(id);
+    if (projeto is null)
+        return Result<ProjetoResponseDTO>.Failure("Projeto não encontrado.", 404);
+
+    if (!projeto.IsActive)
+        return Result<ProjetoResponseDTO>.Failure("Projeto inativo não pode ser editado.", 400);
+
+    // IsActive é controlado exclusivamente por DesativarProjetoCase.
+    // Nunca atribuir IsActive aqui — o valor existente da entidade rastreada
+    // deve ser preservado em qualquer atualização de projeto.
+
+    if (dto.Name is not null) projeto.Name = dto.Name;
+    if (dto.Description is not null) projeto.Description = dto.Description;
+    if (dto.TipoProjeto is not null) projeto.TipoProjeto = dto.TipoProjeto;
+    if (dto.GerenteProjetoId.HasValue) projeto.GerenteProjetoId = dto.GerenteProjetoId.Value;
+    if (dto.SponsorId.HasValue) projeto.SponsorId = dto.SponsorId.Value;
+    if (dto.DataInicio.HasValue) projeto.DataInicio = dto.DataInicio.Value;
+    if (dto.DataFimPrevista.HasValue) projeto.DataFimPrevista = dto.DataFimPrevista.Value;
+    if (dto.DataFimReal.HasValue) projeto.DataFimReal = dto.DataFimReal.Value;
+    if (dto.OrcamentoPrevisto.HasValue) projeto.OrcamentoPrevisto = dto.OrcamentoPrevisto.Value;
+    if (dto.OrcamentoRealizado.HasValue) projeto.OrcamentoRealizado = dto.OrcamentoRealizado.Value;
+
+    var updated = await projetoRepository.UpdateAsync(projeto);
+    return Result<ProjetoResponseDTO>.Success(new ProjetoResponseDTO(updated));
+}
 ```

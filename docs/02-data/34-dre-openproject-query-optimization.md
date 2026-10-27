@@ -117,7 +117,26 @@ The prepared data matched an independently captured earlier source reference. Sn
 ## Code example
 
 ```csharp
-var merged = cached.Months.Values.SelectMany(x => x).ToDictionary(x => x.Id!.Value);
-foreach (var entry in changes)
-    merged[entry.Id!.Value] = entry;
+if (attempt == 0 && cached is not null && client.AllowSnapshot && version is not null
+    && cached.Inicio == start && cached.Fim == end)
+{
+    try
+    {
+        var changes = await ChangesAsync(start, end, ids, cached.CheckedAtUtc, ct);
+        var merged = cached.Months.Values.SelectMany(x => x).ToDictionary(x => x.Id!.Value);
+        foreach (var entry in changes)
+            merged[entry.Id!.Value] = entry;
+        entries = merged.Values.OrderBy(x => x.Id).ToList();
+        // Exclusões e saídas do filtro não aparecem no delta.
+        // Uma contagem divergente exige substituir a cópia completa.
+        if (entries.Count != Count(version) || version != cached.Revision && changes.Count == 0)
+            entries = await FullAsync(filters, start, end, ids, ct);
+    }
+    catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.BadRequest)
+    {
+        entries = await FullAsync(filters, start, end, ids, ct);
+    }
+}
+else
+    entries = await FullAsync(filters, start, end, ids, ct);
 ```

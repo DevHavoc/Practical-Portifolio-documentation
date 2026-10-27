@@ -229,9 +229,30 @@ The most important lesson was that an apparently simple requirement — **"impor
 ## Code example
 
 ```csharp
+var extensao = Path.GetExtension(arquivo.FileName);
+if (!string.Equals(extensao, ".xlsx", StringComparison.OrdinalIgnoreCase))
+{
+    return Result<IEnumerable<ProjetoStakeholderResponseDTO>>.Failure(
+        "O arquivo deve estar no formato .xlsx.",
+        400);
+}
 using var stream = arquivo.OpenReadStream();
 
 var rows = stream
     .Query(useHeaderRow: true)
     .ToList();
+
+if (rows.Count == 0)
+{
+    return Result<IEnumerable<ProjetoStakeholderResponseDTO>>.Failure(
+        "O arquivo não possui stakeholders para importar.",
+        400);
+}
+var primeiraLinha = rows.First() as IDictionary<string, object>;
+if (primeiraLinha is null)
+{
+    return Result<IEnumerable<ProjetoStakeholderResponseDTO>>.Failure(
+        "Não foi possível interpretar o cabeçalho do arquivo Excel.",
+        400);
+}
 ```

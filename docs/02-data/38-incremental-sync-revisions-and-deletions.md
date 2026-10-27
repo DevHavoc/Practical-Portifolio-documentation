@@ -1,30 +1,29 @@
-# Incremental Synchronization, Revisions and Deletions
+# Updating Changed Records Without Reloading Every Year
 
 ## Problem
 
-Re-reading a complete historical period after every search spent most of its time confirming data that had not changed. A naive updated-record query had another problem: deleted entries and records moved out of a filter do not appear as ordinary updates in the requested scope.
+Fetching the full history for every search repeated a lot of work. Fetching only changed records was faster, but deleted records and records that no longer matched the filter could be missed.
 
-## Approach
+## What changed
 
-The reader keeps a verified checkpoint and overlays changed entries by stable ID. Revision and count checks accompany the delta. A disagreement, or a revision change with no corresponding changes returned, can require a full reread. The design also revalidates names and classification dependencies; hours alone are insufficient when the grouping metadata changes.
+I kept the last checked data and replaced changed entries by their IDs. The reader then checks the source revision and record count. If they disagree with the combined data, it fetches the full period again. It also checks the names and classifications used to group the hours.
 
-An overlapping update window protects the boundary around timestamp granularity and time-zone interpretation. For the background checkpoint, extending the prepared period by a day retrieves the missing range rather than automatically reloading all earlier years. A first historical collection still has to do the original work.
+The update window overlaps the previous check to reduce the chance of missing changes near a date boundary. When background preparation adds another day, it can fetch that missing range without loading every earlier year again.
 
-## Concurrent changes
+## Changes during a load
 
-The live investigation observed the origin changing while the initial collection ran. The incomplete confidence state was rejected. The background path was then extended with bounded reconciliation using the already-loaded candidate as an in-memory checkpoint. Candidate data is not published before its revisions are confirmed. Persistent inconsistency still fails instead of converting partial data into a fresh result.
+During testing, OpenProject changed while the first load was running. The reader rejected that result and checked again. The background path can retry a limited number of times using the data it already loaded. It only makes the result available after the revision checks pass. If the source keeps changing, the update fails instead of marking incomplete data as current.
 
-## Measured behavior
+## What was measured
 
-The later local incremental cycle took approximately 32.10 seconds and transferred 668,873 bytes, compared with 270.39 seconds and 78,400,935 bytes for historical preparation. These are different workloads, not a controlled claim that one identical query became 88 percent faster. The report-period data matched the reference and the finance comparison used identical synthetic financial inputs.
+Local history preparation took 270.39 seconds and transferred 78,400,935 bytes. A later update took 32.10 seconds and transferred 668,873 bytes. Those were different amounts of work, so they are not a comparison of the exact same request.
 
-## Limits
-
-Metadata checks and bounded retries are conservative consistency controls. They do not create a distributed transaction with the upstream application. Extensive changes, unavailable revision information or deletion inconsistencies may legitimately fall back to a full load or defer publication.
+The returned entries matched the reference. The financial comparison used the same synthetic financial inputs. Large changes or failed checks can still require a full reload.
 
 ## Code example
 
 ```csharp
+var changes = await ChangesAsync(start, end, ids, cached.CheckedAtUtc, ct);
 var merged = cached.Months.Values.SelectMany(x => x).ToDictionary(x => x.Id!.Value);
 foreach (var entry in changes)
     merged[entry.Id!.Value] = entry;

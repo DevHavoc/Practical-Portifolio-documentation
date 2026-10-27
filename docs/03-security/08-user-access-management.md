@@ -117,7 +117,26 @@ A centralized access-management interface becomes more useful when it combines *
 ## Code example
 
 ```csharp
-var entity = dto.ToEntity();
+public async Task<Result<UserAccessResponseDTO>> HandleAsync(UserAccessCreateDTO dto)
+{
+    var existingAccess = await userAccessRepository
+        .GetByUserAndSystemAsync(dto.UserId, dto.System);
 
-var created = await userAccessRepository.CreateAsync(entity);
+    if (existingAccess is not null)
+    {
+        return Result<UserAccessResponseDTO>.Failure(
+            $"O usuário já possui um registro de acesso para o sistema '{dto.System}'."
+        );
+    }
+
+    var entity = dto.ToEntity();
+
+    var created = await userAccessRepository.CreateAsync(entity);
+
+    return created is not null
+        ? Result<UserAccessResponseDTO>.Success(
+            new UserAccessResponseDTO(created),
+            200)
+        : Result<UserAccessResponseDTO>.Failure("Erro na criação do acesso.");
+}
 ```

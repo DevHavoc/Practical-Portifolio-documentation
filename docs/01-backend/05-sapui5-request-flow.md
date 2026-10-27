@@ -163,4 +163,7 @@ var formData = new FormData();
 formData.append("arquivo", oFile);
 
 req.postFormData("", formData)
+    .then(function () {
+        MessageToast.show("Stakeholders importados com sucesso.");
+    })
 ```

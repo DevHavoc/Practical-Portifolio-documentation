@@ -121,8 +121,11 @@ A well-understood architecture also provides a **map for debugging production pr
 ## Code example
 
 ```csharp
-var result = await exportUserAccessesCase.HandleSelectedAsync(dto.AccessIds);
-if (result.IsFailure) return result.ToActionResult();
-return File(result.Data!, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    $"Acessos_Selecionados_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+public async Task<IActionResult> ExportSelected([FromBody] UserAccessExportDTO dto)
+{
+    var result = await exportUserAccessesCase.HandleSelectedAsync(dto.AccessIds);
+    if (result.IsFailure) return result.ToActionResult();
+    return File(result.Data!, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        $"Acessos_Selecionados_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+}
 ```

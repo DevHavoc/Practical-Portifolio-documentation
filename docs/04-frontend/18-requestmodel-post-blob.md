@@ -114,5 +114,39 @@ The PDF feature was not only a reporting implementation. It exposed a reusable f
 ## Code example
 
 ```javascript
-return this._requestBlob(path, "POST");
+getBlob(path) {
+    return this._requestBlob(path, "GET");
+},
+postBlob(path) {
+    return this._requestBlob(path, "POST");
+},
+async _requestBlob(path, method) {
+    this.valid();
+    this._request.method = method;
+    if (method === "POST") this._request.body = JSON.stringify(this.getData());
+    else delete this._request.body;
+    const uri = this.getFullUrl(path);
+    try {
+        let response = await fetch(uri, this._request);
+        if (response.status === 401) {
+            const authService = this.getAuthService();
+            if (authService && await authService.refreshAccessToken()) {
+                this._reapplyAuthHeader();
+                response = await fetch(uri, this._request);
+            }
+        }
+        if (!response.ok) {
+            let message = response.status === 401 ? "Sessão expirada." :
+                response.statusText || "Erro ao gerar o relatório.";
+            try {
+                const payload = await response.json();
+                message = payload.error || payload.message || message;
+            } catch (error) { }
+            throw { statusCode: response.status, message: message };
+        }
+        return await response.blob();
+    } finally {
+        if (this._busy && typeof this._busy.setBusy === "function") this._busy.setBusy(false);
+    }
+},
 ```

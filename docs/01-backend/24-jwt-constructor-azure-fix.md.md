@@ -108,6 +108,13 @@ Keeping tests aligned with application contracts helps CI/CD detect these incons
 ## Code example
 
 ```csharp
+_mockUserRepository.Setup(r => r.GetUserByIdAsync(5)).ReturnsAsync(MakeUser());
+_mockUserRepository.Setup(r => r.DeactivateUserAsync(5)).ReturnsAsync(true);
+
+var result = await _useCase.HandleAsync(5, false);
+
+Assert.That(result.IsSuccess, Is.True);
+Assert.That(result.Data, Is.EqualTo("deactivated"));
 _mockUserAccessRepository.Verify(r => r.DeactivateAllByUserIdAsync(5), Times.Once);
 _mockRefreshTokenRepository.Verify(r => r.RevokeAllByUserIdAsync(5), Times.Once);
 _mockBlacklist.Verify(b => b.BlacklistAsync(5, TimeSpan.FromMinutes(60)), Times.Once);

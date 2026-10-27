@@ -86,4 +86,8 @@ For very large datasets, asynchronous report generation, background jobs or stre
 var users = userIds != null && userIds.Count > 0
     ? await userRepository.GetByIdsAsync(userIds)
     : await userRepository.GetAllForReportAsync(search, isActive);
+if (users.Count == 0)
+    return Result<byte[]>.Failure(
+        "Nenhum usuário encontrado.",
+        404);
 ```

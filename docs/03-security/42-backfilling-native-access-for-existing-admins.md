@@ -1,35 +1,51 @@
-# Backfilling Native Access for Existing Administrators
+# Giving Existing Admins the Missing User Overview Access
 
 ## Problem
 
-New administrator registration automatically created an active user-overview capability. Administrators who existed before that behavior had no equivalent backfill. The module could be visible to their role while the guarded detail endpoint correctly rejected them for lacking the separate active capability.
+New admins received the User Overview access automatically. Older admins did not. They could see the module but receive a forbidden response when opening the protected details.
 
-## Forward-only data correction
+## What changed
 
-A new migration selects users whose stored profile is administrator, whose account is active and who do not already have the capability. It inserts only those missing grants. Existing active, inactive or suspended assignments keep their status, assignment profile, timestamps and creator. Ordinary users and inactive administrators receive no new assignment in this pass.
+I added a migration that gives this access only to active admins who do not already have it. Existing access records stay unchanged, including inactive or suspended ones. Regular users and inactive admins receive no new access.
 
-The migration uses fixed SQL and the enum's stored administrator value, not a request-supplied role or user ID. Database defaults supply the existing UTC audit timestamps, and the creator remains null because a system migration is not a human administrator. A conflict guard prevents duplicate insertion.
+The SQL uses fixed conditions and the stored admin enum value. A conflict check prevents duplicates. Existing database defaults fill the audit dates, and the creator stays null because a migration is not a human administrator.
 
-## Rollback decision
+## Why rollback does not delete the access
 
-The new migration does not rewrite previous migrations or edit their recorded versions. Its Down method preserves grants: the table does not retain a reliable marker that would distinguish a migration-created grant from a later human assignment. Automatically deleting matching rows during rollback could revoke legitimate access. This describes the new data migration only, not the behavior of rolling the whole database below the table-creation version.
+The table cannot reliably tell whether this migration or an administrator created a matching access record. Deleting those records during rollback could remove a valid manual assignment. The migration therefore leaves them in place.
 
-## Evidence
+## What was checked
 
-Three regression cases passed before the user requested that the final application change retain only the migration. A PostgreSQL rehearsal also verified active-administrator selection, preservation of blocked assignments and repeated startup. The final application change contains one migration file. Production data was not modified by this validation.
+Three focused regression cases passed. A separate PostgreSQL test checked active admins, existing blocked access, audit fields and repeated startup. The final application change kept only this migration file, as requested. These checks used local test data and did not change production.
 
-An inactive administrator who is later reactivated still needs an explicit access review; this migration does not silently create future grants or bypass the endpoint's capability check.
+An inactive admin who is reactivated later still needs an access review. This migration fills the current gap; it does not automatically grant future access.
 
 ## Code example
 
-```sql
-INSERT INTO public."UserAccesses" ("UserId", "System", "IsActive", "Cargo", "Status")
-SELECT u."Id", 'Visão do Usuário', TRUE, 'Admin', 'Ativo'
-FROM public."UsersDB" u
-WHERE u."Profile" = 0 AND u."IsActive" = TRUE
+```csharp
+    public override void Up()
+    {
+        // Completa somente o vínculo ausente. Um acesso existente, inclusive bloqueado, mantém sua decisão e auditoria.
+        IfDatabase("PostgreSQL").Execute.Sql($@"
+INSERT INTO public.""UserAccesses"" (""UserId"", ""System"", ""IsActive"", ""Cargo"", ""Status"")
+SELECT u.""Id"", 'Visão do Usuário', TRUE, 'Admin', 'Ativo'
+FROM public.""UsersDB"" u
+WHERE u.""Profile"" = {(int)UserProfile.Admin} AND u.""IsActive"" = TRUE
   AND NOT EXISTS (
-      SELECT 1 FROM public."UserAccesses" a
-      WHERE a."UserId" = u."Id" AND a."System" = 'Visão do Usuário'
+      SELECT 1 FROM public.""UserAccesses"" a
+      WHERE a.""UserId"" = u.""Id"" AND a.""System"" = 'Visão do Usuário'
   )
-ON CONFLICT ("UserId", "System") DO NOTHING;
+ON CONFLICT (""UserId"", ""System"") DO NOTHING;
+");
+        IfDatabase("SqlServer").Execute.Sql($@"
+INSERT INTO [public].[UserAccesses] ([UserId], [System], [IsActive], [Cargo], [Status])
+SELECT u.[Id], N'Visão do Usuário', 1, N'Admin', N'Ativo'
+FROM [public].[UsersDB] u
+WHERE u.[Profile] = {(int)UserProfile.Admin} AND u.[IsActive] = 1
+  AND NOT EXISTS (
+      SELECT 1 FROM [public].[UserAccesses] a WITH (UPDLOCK, HOLDLOCK)
+      WHERE a.[UserId] = u.[Id] AND a.[System] = N'Visão do Usuário'
+  );
+");
+    }
 ```

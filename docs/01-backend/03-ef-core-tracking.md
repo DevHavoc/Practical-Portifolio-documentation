@@ -125,7 +125,45 @@ They are **state-management problems** that happen before SQL is generated.
 ## Code example
 
 ```csharp
-context.Attach(row);
-context.Entry(row).State = EntityState.Modified;
-context.Entry(row).Property(x => x.Version).OriginalValue = expectedVersion.Value;
+public async Task<bool> TrySaveAsync(string source, string key, string payload, Guid? expectedVersion, CancellationToken ct)
+{
+    var row = new DreReadModelSnapshot
+    {
+        SourceKey = source,
+        SnapshotKey = key,
+        Payload = payload,
+        Version = Guid.NewGuid(),
+        StoredAtUtc = DateTime.UtcNow
+    };
+    if (expectedVersion is null)
+    {
+        context.DreReadModelSnapshots.Add(row);
+    }
+    else
+    {
+        context.Attach(row);
+        context.Entry(row).State = EntityState.Modified;
+        context.Entry(row).Property(x => x.Version).OriginalValue = expectedVersion.Value;
+    }
+    try
+    {
+        await context.SaveChangesAsync(ct);
+        return true;
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+        context.Entry(row).State = EntityState.Detached;
+        return false;
+    }
+    catch (DbUpdateException) when (expectedVersion is null)
+    {
+        context.Entry(row).State = EntityState.Detached;
+        if (await context.DreReadModelSnapshots.AnyAsync(x => x.SourceKey == source && x.SnapshotKey == key, ct))
+        {
+            return false;
+        }
+
+        throw;
+    }
+}
 ```

@@ -69,9 +69,17 @@ The inspected fix protects subsequent requests. It is not a claim of real-time r
 ## Code example
 
 ```csharp
-var canViewOverview = await getUserAccessCase.HasActiveAccessAsync(
-    jwtClaimsExtractor.GetRequiredUserId(),
-    "Visão do Usuário");
-if (!canViewOverview.Data)
-    return Forbid();
+[HttpGet("user-overview/{userId:int}")]
+[Authorize(Policy = "Admin")]
+[HasPermission("Acessos.Usuarios.Visualizar")]
+public async Task<IActionResult> GetUserOverview(int userId)
+{
+    var canViewOverview = await getUserAccessCase.HasActiveAccessAsync(
+        jwtClaimsExtractor.GetRequiredUserId(),
+        "Visão do Usuário");
+    if (!canViewOverview.Data)
+        return Forbid();
+
+    return (await getUserByIdCase.HandleAsync(userId)).ToActionResult();
+}
 ```

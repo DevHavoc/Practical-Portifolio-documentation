@@ -80,5 +80,47 @@ Possible future additions include report templates, configurable sections, gener
 ## Code example
 
 ```csharp
-var accesses = await userAccessRepository.GetByUserIdAsync(userId);
+public async Task<Result<byte[]>> HandleAsync(int userId)
+{
+    var user = await userRepository.GetUserByIdAsync(userId);
+
+    if (user is null)
+    {
+        return Result<byte[]>.Failure(
+            "Usuário não encontrado.",
+            404);
+    }
+
+    var accesses = await userAccessRepository.GetByUserIdAsync(userId);
+
+    var report = new UserReportDTO
+    {
+        Id = user.Id,
+        Name = user.Name,
+        Username = user.Username,
+        Email = user.Email,
+        Cargo = user.Cargo?.Name ?? "Não informado",
+        Profile = user.Profile.ToString(),
+        IsActive = user.IsActive,
+        CreatedDate = user.CreatedDate,
+
+        CreatedByUserName = user.CreatedByUser?.Name,
+        CreatedByUserUsername = user.CreatedByUser?.Username,
+
+        Accesses = accesses.Select(access => new UserAccessReportDTO
+        {
+            System = access.System,
+            IsActive = access.IsActive,
+            Cargo = access.Cargo,
+            CreatedAt = access.CreatedAt,
+
+            CreatedByUserName = access.CreatedByUser?.Name,
+            CreatedByUserUsername = access.CreatedByUser?.Username
+        }).ToList()
+    };
+
+    var pdf = pdfGeneratorRepository.GenerateUserReport(report);
+
+    return Result<byte[]>.Success(pdf);
+}
 ```
